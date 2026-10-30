@@ -1,0 +1,41 @@
+const GOOGLE_BASE = "https://generativelanguage.googleapis.com";
+const DEFAULT_VERSION = "v1beta";
+
+export async function googleFetch(
+	path: string,
+	options: {
+		method?: string;
+		headers?: Record<string, string>;
+		body?: any;
+		stream?: boolean;
+	},
+	googleKey: string
+): Promise<Response> {
+	const method = options.method || "GET";
+	const headers: Record<string, string> = {
+		"x-goog-api-key": googleKey,
+		...(options.headers || {}),
+	};
+	
+	let body: BodyInit | undefined = undefined;
+	if (options.body !== undefined && options.body !== null) {
+		if (typeof options.body === "string") {
+			body = options.body;
+		} else {
+			body = JSON.stringify(options.body);
+			headers["content-type"] = headers["content-type"] || "application/json";
+		}
+	}
+	
+	const url = `${GOOGLE_BASE}/${DEFAULT_VERSION}/${path}`;
+	
+	const res = await fetch(url, {
+		method,
+		headers,
+		body,
+		// @ts-ignore
+		duplex: options.stream ? "half" : undefined,
+	});
+	
+	return res;
+}
