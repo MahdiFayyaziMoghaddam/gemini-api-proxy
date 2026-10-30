@@ -18,10 +18,10 @@ export function googleToOpenAI(googleResp: any, model: string) {
 	const created = Math.floor(Date.now() / 1000);
 	const candidate = googleResp?.candidates?.[0];
 	const parts = candidate?.content?.parts || [];
-	
+
 	let content = "";
 	const toolCalls: any[] = [];
-	
+
 	for (let i = 0; i < parts.length; i++) {
 		const part = parts[i];
 		if (part.text && !part.thought) {
@@ -37,13 +37,13 @@ export function googleToOpenAI(googleResp: any, model: string) {
 			});
 		}
 	}
-	
+
 	const usage = googleResp?.usageMetadata ? {
 		prompt_tokens: googleResp.usageMetadata.promptTokenCount || 0,
 		completion_tokens: googleResp.usageMetadata.candidatesTokenCount || 0,
 		total_tokens: googleResp.usageMetadata.totalTokenCount || 0,
 	} : undefined;
-	
+
 	const message: any = {
 		role: "assistant",
 		content: content || null,
@@ -51,7 +51,7 @@ export function googleToOpenAI(googleResp: any, model: string) {
 	if (toolCalls.length > 0) {
 		message.tool_calls = toolCalls;
 	}
-	
+
 	return {
 		id,
 		object: "chat.completion",
@@ -67,7 +67,8 @@ export function googleToOpenAI(googleResp: any, model: string) {
 }
 
 export function googleModelToOpenAI(gModel: any) {
-	const id = gModel?.name?.replace("models/", "") || gModel?.baseModelId || "";
+	const name = gModel?.name || gModel?.baseModelId || "";
+	const id = name.startsWith("models/") ? name.slice("models/".length) : name.startsWith("tunedModels/") ? name : name;
 	return {
 		id,
 		object: "model",

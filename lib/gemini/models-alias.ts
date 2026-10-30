@@ -11,10 +11,15 @@ const ALIAS: Record<string, string> = {
 	"o3-mini": "gemini-2.5-flash",
 };
 
+// Returns the full Google resource name, e.g. "models/gemini-2.5-flash".
 export function normalizeModel(model: string | undefined | null): string {
-	if (!model) return "gemini-2.5-flash";
-	if (ALIAS[model]) return ALIAS[model];
-	if (model.startsWith("models/")) return model.replace("models/", "");
-	if (model.startsWith("tunedModels/")) return model;
-	return model;
+	if (!model) return "models/gemini-2.5-flash";
+	if (ALIAS[model]) return `models/${ALIAS[model]}`;
+	if (model.startsWith("models/") || model.startsWith("tunedModels/")) return model;
+	return `models/${model}`;
+}
+
+// Strips the resource prefix for the OpenAI "model" field.
+export function bareModelId(resource: string): string {
+	return resource.startsWith("models/") ? resource.slice("models/".length) : resource;
 }

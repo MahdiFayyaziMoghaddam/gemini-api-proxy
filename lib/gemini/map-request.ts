@@ -1,4 +1,4 @@
-import { normalizeModel } from "./models-alias";
+import { bareModelId, normalizeModel } from "./models-alias";
 
 export interface OpenAIChatBody {
 	model?: string;
@@ -40,11 +40,14 @@ function mapContentPart(part: any): any[] {
 	return [];
 }
 
-function mapMessage(msg: any): { contents: any[]; systemParts: any[]; toolCallParts?: any[]; toolResponseParts?: any[] } {
+function mapMessage(
+	msg: any,
+	toolNames: Map<string, string>
+): { contents: any[]; systemParts: any[] } {
 	const role = msg.role;
 	const systemParts: any[] = [];
 	const contents: any[] = [];
-	
+
 	if (role === "system") {
 		if (typeof msg.content === "string") {
 			systemParts.push({ text: msg.content });
@@ -55,7 +58,7 @@ function mapMessage(msg: any): { contents: any[]; systemParts: any[]; toolCallPa
 		}
 		return { contents, systemParts };
 	}
-	
+
 	if (role === "user") {
 		const parts: any[] = [];
 		if (typeof msg.content === "string") {
@@ -65,17 +68,21 @@ function mapMessage(msg: any): { contents: any[]; systemParts: any[]; toolCallPa
 				parts.push(...mapContentPart(p));
 			}
 		}
-		contents.push({ role: "user", parts });
+		if (parts.length > 0) {
+			contents.push({ role: "user", parts });
+		}
 		return { contents, systemParts };
 	}
-	
+
 	if (role === "assistant") {
 		const parts: any[] = [];
-		if (typeof msg.content === "string" && msg.content) {
-			parts.push({ text: msg.content });
-		} else if (Array.isArray(msg.content)) {
-			for (const p of msg.content) {
-				parts.push(...mapContentPart(p));
+		if (msg.content !== null && msg.content !== undefined) {
+			if (typeof msg.content === "string") {
+				if (msg.content) parts.push({ text: msg.content });
+			} else if (Array.isArray(msg.content)) {
+				for (const p of msg.content) {
+					parts.push(...mapContentPart(p));
+				}
 			}
 		}
 		if (msg.tool_calls && Array.isArray(msg.tool_calls)) {
@@ -83,9 +90,16 @@ function mapMessage(msg: any): { contents: any[]; systemParts: any[]; toolCallPa
 				if (tc.function) {
 					let args: any = {};
 					try {
-						args = typeof tc.function.arguments === "string" ? JSON.parse(tc.function.arguments) : tc.function.arguments || {};
+						if (typeof tc.function.arguments === "string") {
+							args = JSON.parse(tc.function.arguments);
+						} else {
+							args = tc.function.arguments || {};
+						}
 					} catch {
 						args = {};
+					}
+					if (tc.id && tc.function.name) {
+						toolNames.set(tc.id, tc.function.name);
 					}
 					parts.push({ functionCall: { name: tc.function.name, args } });
 				}
@@ -94,10 +108,12 @@ function mapMessage(msg: any): { contents: any[]; systemParts: any[]; toolCallPa
 		if (parts.length === 0 && msg.content) {
 			parts.push({ text: String(msg.content) });
 		}
-		contents.push({ role: "model", parts });
+		if (parts.length > 0) {
+			contents.push({ role: "model", parts });
+		}
 		return { contents, systemParts };
 	}
-	
+
 	if (role === "tool") {
 		let response: any = msg.content;
 		try {
@@ -107,40 +123,45 @@ function mapMessage(msg: any): { contents: any[]; systemParts: any[]; toolCallPa
 		} catch {
 			response = { result: response };
 		}
-		const name = msg.name || msg.tool_call_id || "tool";
+		let name = msg.name;
+		if (!name && msg.tool_call_id) {
+			name = toolNames.get(msg.tool_call_id);
+		}
+		if (!name) name = "tool";
 		contents.push({ role: "user", parts: [{ functionResponse: { name, response } }] });
 		return { contents, systemParts };
 	}
-	
+
 	return { contents, systemParts };
 }
 
 export function openaiChatToGoogle(body: OpenAIChatBody) {
-	const model = normalizeModel(body.model);
+	const resource = normalizeModel(body.model);
 	const stream = body.stream === true;
 	const contents: any[] = [];
 	const systemParts: any[] = [];
-	
+	const toolNames = new Map<string, string>();
+
 	if (body.messages && Array.isArray(body.messages)) {
 		for (const msg of body.messages) {
-			const mapped = mapMessage(msg);
+			const mapped = mapMessage(msg, toolNames);
 			if (mapped.systemParts.length > 0) systemParts.push(...mapped.systemParts);
 			if (mapped.contents.length > 0) contents.push(...mapped.contents);
 		}
 	}
-	
+
 	const requestBody: any = { contents };
 	if (systemParts.length > 0) {
 		requestBody.systemInstruction = { parts: systemParts };
 	}
-	
+
 	const generationConfig: any = {};
 	if (typeof body.temperature === "number") generationConfig.temperature = body.temperature;
 	if (typeof body.top_p === "number") generationConfig.topP = body.top_p;
 	if (typeof body.max_tokens === "number") generationConfig.maxOutputTokens = body.max_tokens;
 	else if (typeof body.max_completion_tokens === "number") generationConfig.maxOutputTokens = body.max_completion_tokens;
 	if (body.stop) generationConfig.stopSequences = Array.isArray(body.stop) ? body.stop : [body.stop];
-	
+
 	if (body.response_format) {
 		if (body.response_format.type === "json_object") {
 			generationConfig.responseMimeType = "application/json";
@@ -153,11 +174,11 @@ export function openaiChatToGoogle(body: OpenAIChatBody) {
 			}
 		}
 	}
-	
+
 	if (Object.keys(generationConfig).length > 0) {
 		requestBody.generationConfig = generationConfig;
 	}
-	
+
 	if (body.tools && Array.isArray(body.tools) && body.tools.length > 0) {
 		const functionDeclarations: any[] = [];
 		for (const tool of body.tools) {
@@ -172,8 +193,8 @@ export function openaiChatToGoogle(body: OpenAIChatBody) {
 			requestBody.tools = [{ functionDeclarations }];
 		}
 	}
-	
-	const urlPath = stream ? `models/${model}:streamGenerateContent?alt=sse` : `models/${model}:generateContent`;
-	
-	return { model, urlPath, body: requestBody, stream };
+
+	const urlPath = stream ? `${resource}:streamGenerateContent?alt=sse` : `${resource}:generateContent`;
+
+	return { model: bareModelId(resource), urlPath, body: requestBody, stream };
 }

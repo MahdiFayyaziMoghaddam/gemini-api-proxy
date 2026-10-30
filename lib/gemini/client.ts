@@ -8,6 +8,7 @@ export async function googleFetch(
 		headers?: Record<string, string>;
 		body?: any;
 		stream?: boolean;
+		timeoutMs?: number;
 	},
 	googleKey: string
 ): Promise<Response> {
@@ -16,7 +17,7 @@ export async function googleFetch(
 		"x-goog-api-key": googleKey,
 		...(options.headers || {}),
 	};
-	
+
 	let body: BodyInit | undefined = undefined;
 	if (options.body !== undefined && options.body !== null) {
 		if (typeof options.body === "string") {
@@ -26,16 +27,22 @@ export async function googleFetch(
 			headers["content-type"] = headers["content-type"] || "application/json";
 		}
 	}
-	
+
 	const url = `${GOOGLE_BASE}/${DEFAULT_VERSION}/${path}`;
-	
-	const res = await fetch(url, {
+
+	const fetchOptions: RequestInit & { duplex?: "half" } = {
 		method,
 		headers,
 		body,
-		// @ts-ignore
-		duplex: options.stream ? "half" : undefined,
-	});
-	
+	};
+
+	if (options.stream) {
+		fetchOptions.duplex = "half";
+	} else {
+		const timeoutMs = typeof options.timeoutMs === "number" ? options.timeoutMs : 120000;
+		fetchOptions.signal = AbortSignal.timeout(timeoutMs);
+	}
+
+	const res = await fetch(url, fetchOptions as RequestInit);
 	return res;
 }
