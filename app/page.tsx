@@ -40,25 +40,28 @@ function Home() {
 					Gemini API Proxy
 				</h1>
 
-				<p className="text-base sm:text-lg text-slate-300/90 leading-relaxed max-w-lg mb-8 select-none">
+				<p className="text-base sm:text-lg text-slate-300/90 leading-relaxed max-w-lg sm:mb-8 mb-4 select-none">
 					You don't need to VPN anymore {":)"}
 				</p>
 
 				<button
 					onClick={handleCopy}
-					className="group flex items-center gap-3 rounded-full select-none cursor-pointer border border-slate-700/60 bg-slate-900/60 backdrop-blur px-5 py-3 transition-all hover:border-slate-500 hover:bg-slate-800/70"
+					className="group flex items-center sm:gap-3 gap-1.5 rounded-full select-none cursor-pointer border border-slate-700/60 bg-slate-900/60 backdrop-blur sm:px-5 sm:py-3 px-2.5 py-1 transition-all hover:border-slate-500 hover:bg-slate-800/70"
 				>
-					<span className="font-mono text-sm text-slate-300 select-all">{link}</span>
-					<span className="h-5 w-px bg-slate-700" />
-					<span className="flex items-center gap-1.5 text-sm font-medium text-slate-300 transition-colors group-hover:text-white">
+					<span className="font-mono sm:text-sm text-xs text-slate-300 select-all max-sm:*:first:hidden sm:*:nth-[2]:hidden">
+						<span>{link}</span>
+						<span>{link.split("://")[1]}</span>
+					</span>
+					<span className="h-5 w-[0.5px] bg-slate-700" />
+					<span className="flex items-center gap-1.5 sm:text-sm text-xs font-medium text-slate-300 transition-colors group-hover:text-white">
 						{copied ? (
 							<>
-								<Check className="w-4 h-4 text-pink-400" />
+								<Check className="sm:size-4 size-3 text-pink-400" />
 								<span className="text-pink-400">Copied</span>
 							</>
 						) : (
 							<>
-								<Copy className="w-4 h-4" />
+								<Copy className="sm:size-4 size-3" />
 								<span>Copy</span>
 							</>
 						)}
