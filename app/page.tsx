@@ -6,7 +6,7 @@ import Link from "next/link";
 
 function Home() {
 	const [copied, setCopied] = useState(false);
-	const link = "https://burh.vercel.app/v1";
+	const link = "https://gemini-api-proxy-v1.vercel.app/v1";
 
 	const handleCopy = async () => {
 		try {
