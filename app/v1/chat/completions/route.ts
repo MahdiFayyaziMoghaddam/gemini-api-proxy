@@ -2,13 +2,14 @@ import { extractKey } from "../../../../lib/gemini/auth";
 import { geminiFetch } from "../../../../lib/gemini/client";
 import { openAIErrorResponse, mapGeminiErrorToOpenAI } from "../../../../lib/openai/errors";
 import { toGemini, fromGemini } from "../../../../lib/translate/chat";
+import { config } from "../../../../lib/config";
 
 export const runtime = "nodejs";
 export const maxDuration = 300;
 
 export async function POST(req: Request) {
 	try {
-		const key = extractKey(req);
+		const key = config.getGeminiApiKey() || extractKey(req);
 		let body: any;
 		try { body = await req.json(); } catch { return openAIErrorResponse(400, "Invalid JSON body", "invalid_request_error"); }
 		if (!body?.messages || !Array.isArray(body.messages)) return openAIErrorResponse(400, "messages must be an array", "invalid_request_error");
