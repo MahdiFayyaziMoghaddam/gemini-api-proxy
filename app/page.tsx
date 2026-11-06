@@ -73,12 +73,12 @@ function Home() {
 				<p className="text-sm font-medium text-slate-400/70 transition-colors select-none">
 					Created by{" "}
 					<Link
-						href="https://t.me/mhdifyyzi"
+						href="https://github.com/MahdiFayyaziMoghaddam/gemini-api-proxy"
 						target="_blank"
 						rel="noopener noreferrer"
 						className="text-pink-400 hover:text-slate-200 transition-colors"
 					>
-						@mhdifyyzi
+						MFM
 					</Link>
 				</p>
 			</footer>
