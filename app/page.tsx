@@ -40,8 +40,11 @@ function Home() {
 					Gemini API Proxy
 				</h1>
 
-				<p className="text-base sm:text-lg text-slate-300/90 leading-relaxed max-w-lg sm:mb-8 mb-4 select-none">
-					You don't need to VPN anymore {":)"}
+				<p className="text-base sm:text-lg text-slate-300/90 leading-relaxed max-w-lg sm:mb-4 mb-2 select-none">
+					OpenAI compatible proxy for Google Gemini
+				</p>
+				<p className="text-base sm:text-lg text-slate-300/50 leading-relaxed max-w-lg sm:mb-8 mb-4 select-none">
+					You don't need to use VPN anymore {":)"}
 				</p>
 
 				<button
@@ -78,7 +81,7 @@ function Home() {
 						rel="noopener noreferrer"
 						className="text-pink-400 hover:text-slate-200 transition-colors"
 					>
-						MFM
+						@mhdifyyzi
 					</Link>
 				</p>
 			</footer>
