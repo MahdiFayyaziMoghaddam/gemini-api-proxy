@@ -1,7 +1,7 @@
 <div align="center">
   <img src="./public/icon.png" alt="Gemini API Proxy" width="120" />
   <h1>Gemini API Proxy</h1>
-  <p><strong>An OpenAI-compatible proxy for Google Gemini — <em>"You don't need VPN anymore :)"</em></strong></p>
+  <p><strong>An OpenAI compatible proxy for Google Gemini — <em>"You don't need to use VPN anymore :)"</em></strong></p>
   <p>
     <a href="https://gemini-api-proxy-v1.vercel.app/v1">Live API Base URL</a>
     ·
@@ -66,12 +66,12 @@ Google Gemini OpenAI-compatible API
 
 ## API Reference
 
-| Method | Endpoint | Description | Notes |
-|---|---|---|---|
+| Method | Endpoint               | Description              | Notes                                                                               |
+| ------ | ---------------------- | ------------------------ | ----------------------------------------------------------------------------------- |
 | `POST` | `/v1/chat/completions` | Create a chat completion | `stream: true` is currently rejected with a `400` OpenAI error (`param: "stream"`). |
-| `GET` | `/v1/models` | List available models | Proxied via `openai.models.list()`. |
-| `GET` | `/v1/models/{model}` | Retrieve a model | Proxied via `openai.models.retrieve(model)`. |
-| `POST` | `/v1/embeddings` | Create embeddings | Proxied via `openai.embeddings.create(body)`. |
+| `GET`  | `/v1/models`           | List available models    | Proxied via `openai.models.list()`.                                                 |
+| `GET`  | `/v1/models/{model}`   | Retrieve a model         | Proxied via `openai.models.retrieve(model)`.                                        |
+| `POST` | `/v1/embeddings`       | Create embeddings        | Proxied via `openai.embeddings.create(body)`.                                       |
 
 ## Authentication
 
@@ -85,12 +85,12 @@ If the key is missing, the proxy returns a `401` response in OpenAI error format
 
 ```json
 {
-  "error": {
-    "message": "Missing API key",
-    "type": "invalid_request_error",
-    "param": null,
-    "code": 401
-  }
+	"error": {
+		"message": "Missing API key",
+		"type": "invalid_request_error",
+		"param": null,
+		"code": 401
+	}
 }
 ```
 
@@ -149,13 +149,13 @@ curl https://gemini-api-proxy-v1.vercel.app/v1/embeddings \
 import OpenAI from "openai";
 
 const client = new OpenAI({
-  apiKey: process.env.GEMINI_API_KEY,
-  baseURL: "https://gemini-api-proxy-v1.vercel.app/v1",
+	apiKey: process.env.GEMINI_API_KEY,
+	baseURL: "https://gemini-api-proxy-v1.vercel.app/v1"
 });
 
 const completion = await client.chat.completions.create({
-  model: "gemini-2.5-flash",
-  messages: [{ role: "user", content: "Explain this proxy in one sentence." }],
+	model: "gemini-2.5-flash",
+	messages: [{ role: "user", content: "Explain this proxy in one sentence." }]
 });
 
 console.log(completion.choices[0]?.message?.content);
@@ -243,6 +243,6 @@ This app can be deployed as a standard Next.js application.
 ## Credits
 
 <div align="center">
-  <p>Created by <a href="https://t.me/mhdifyyzi">@mhdifyyzi</a> (<strong>MFM</strong>)</p>
-  <p><a href="https://github.com/MahdiFayyaziMoghaddam/gemini-api-proxy">github.com/MahdiFayyaziMoghaddam/gemini-api-proxy</a></p>
+  <p>Repository: <a href="https://github.com/MahdiFayyaziMoghaddam/gemini-api-proxy">github.com/MahdiFayyaziMoghaddam/gemini-api-proxy</a></p>
+  <p>Created by <a href="https://t.me/mhdifyyzi">@mhdifyyzi</a></p>
 </div>
