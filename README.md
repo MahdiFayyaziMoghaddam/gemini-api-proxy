@@ -33,12 +33,12 @@ This project is built for:
 
 - **Developers in restricted networks** who want a deployable proxy endpoint for accessing Gemini via an OpenAI-style interface.
 - **OpenAI SDK users** who want to test or integrate Gemini without rewriting client code.
-- **Apps and automations** that already target `/v1/chat/completions`, `/v1/models`, or `/v1/embeddings` and need a compatible backend.
+- **Apps and automations** that already target `/v1/chat/completions`, `/v1/models`, `/v1/embeddings`, or `/v1/images/generations` and need a compatible backend.
 - **Self-hosted/Vercel deployments** where you control the endpoint and use your own Gemini API key per request.
 
 ## Features
 
-- **OpenAI-compatible routes** for chat completions, model listing/retrieval, and embeddings.
+- **OpenAI-compatible routes** for chat completions, model listing/retrieval, embeddings, and image generation.
 - **Header-based authentication** using `Authorization: Bearer <API_KEY>`.
 - **OpenAI-style error responses** (`{ "error": { message, type, param, code } }`) for validation and upstream failures.
 - **Thin proxy architecture** — route handlers delegate to the `openai` SDK with Gemini's compatible base URL.
@@ -68,10 +68,11 @@ Google Gemini OpenAI-compatible API
 
 | Method | Endpoint               | Description              | Notes                                                                               |
 | ------ | ---------------------- | ------------------------ | ----------------------------------------------------------------------------------- |
-| `POST` | `/v1/chat/completions` | Create a chat completion | Supports `stream: true` (SSE, OpenAI-compatible `chat.completion.chunk` events + final `data: [DONE]`). |
-| `GET`  | `/v1/models`           | List available models    | Proxied via `openai.models.list()`.                                                 |
-| `GET`  | `/v1/models/{model}`   | Retrieve a model         | Proxied via `openai.models.retrieve(model)`.                                        |
-| `POST` | `/v1/embeddings`       | Create embeddings        | Proxied via `openai.embeddings.create(body)`.                                       |
+| `POST` | `/v1/chat/completions`    | Create a chat completion | Supports `stream: true` (SSE, OpenAI-compatible `chat.completion.chunk` events + final `data: [DONE]`). |
+| `GET`  | `/v1/models`              | List available models    | Proxied via `openai.models.list()`.                                                                      |
+| `GET`  | `/v1/models/{model}`      | Retrieve a model         | Proxied via `openai.models.retrieve(model)`.                                                             |
+| `POST` | `/v1/embeddings`          | Create embeddings        | Proxied via `openai.embeddings.create(body)`.                                                            |
+| `POST` | `/v1/images/generations`  | Generate images          | `stream: true` is not supported (returns `400` `invalid_request_error`, `param: "stream"`). Proxied via `openai.images.generate(body)`. |
 
 ## Authentication
 
@@ -143,6 +144,18 @@ curl https://gemini-api-proxy-v1.vercel.app/v1/embeddings \
   }'
 ```
 
+### cURL — Image Generation
+
+```bash
+curl https://gemini-api-proxy-v1.vercel.app/v1/images/generations \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer YOUR_GEMINI_API_KEY" \
+  -d '{
+    "model": "imagen-3.0-generate-002",
+    "prompt": "A serene mountain landscape at sunrise"
+  }'
+```
+
 ### OpenAI JavaScript/TypeScript SDK
 
 ```ts
@@ -211,14 +224,15 @@ pnpm start
 
 ```text
 app/
-  page.tsx                      # Landing page
-  layout.tsx                    # App metadata/layout
+  page.tsx                        # Landing page
+  layout.tsx                      # App metadata/layout
   v1/
-    utils.ts                    # Shared client/auth/response helpers
-    chat/completions/route.ts   # POST /v1/chat/completions
-    models/route.ts             # GET /v1/models
-    models/[model]/route.ts     # GET /v1/models/{model}
-    embeddings/route.ts         # POST /v1/embeddings
+    utils.ts                      # Shared client/auth/response helpers
+    chat/completions/route.ts     # POST /v1/chat/completions
+    models/route.ts               # GET /v1/models
+    models/[model]/route.ts       # GET /v1/models/{model}
+    embeddings/route.ts           # POST /v1/embeddings
+    images/generations/route.ts   # POST /v1/images/generations
 public/
   icon.png
 ```
@@ -228,8 +242,9 @@ public/
 The proxy aims to return **OpenAI-compatible error objects**. Common cases:
 
 - **Missing API key** → `401` with an OpenAI-style `error` payload.
-- **Invalid JSON body** (chat/embeddings) → `400` `invalid_request_error`.
+- **Invalid JSON body** (chat/embeddings/images) → `400` `invalid_request_error`.
 - **Streaming** (`stream: true` on chat completions) → Server-Sent Events (`text/event-stream`) with OpenAI-compatible chunk payloads and a final `data: [DONE]` marker.
+- **Unsupported streaming** (`stream: true` on image generations) → `400` `invalid_request_error` with `param: "stream"`.
 - **Upstream/API errors** → forwarded/normalized to an OpenAI-style `{ error: ... }` response with an appropriate status code when available.
 
 ## Deployment
