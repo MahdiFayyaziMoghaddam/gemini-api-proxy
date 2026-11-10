@@ -68,7 +68,7 @@ Google Gemini OpenAI-compatible API
 
 | Method | Endpoint               | Description              | Notes                                                                               |
 | ------ | ---------------------- | ------------------------ | ----------------------------------------------------------------------------------- |
-| `POST` | `/v1/chat/completions` | Create a chat completion | `stream: true` is currently rejected with a `400` OpenAI error (`param: "stream"`). |
+| `POST` | `/v1/chat/completions` | Create a chat completion | Supports `stream: true` (SSE, OpenAI-compatible `chat.completion.chunk` events + final `data: [DONE]`). |
 | `GET`  | `/v1/models`           | List available models    | Proxied via `openai.models.list()`.                                                 |
 | `GET`  | `/v1/models/{model}`   | Retrieve a model         | Proxied via `openai.models.retrieve(model)`.                                        |
 | `POST` | `/v1/embeddings`       | Create embeddings        | Proxied via `openai.embeddings.create(body)`.                                       |
@@ -229,7 +229,7 @@ The proxy aims to return **OpenAI-compatible error objects**. Common cases:
 
 - **Missing API key** → `401` with an OpenAI-style `error` payload.
 - **Invalid JSON body** (chat/embeddings) → `400` `invalid_request_error`.
-- **Unsupported streaming** (`stream: true` on chat completions) → `400` `invalid_request_error` with `param: "stream"`.
+- **Streaming** (`stream: true` on chat completions) → Server-Sent Events (`text/event-stream`) with OpenAI-compatible chunk payloads and a final `data: [DONE]` marker.
 - **Upstream/API errors** → forwarded/normalized to an OpenAI-style `{ error: ... }` response with an appropriate status code when available.
 
 ## Deployment
