@@ -8,8 +8,7 @@ export interface ModelsResponse {
 export const getClient = (apiKey?: string) => {
 	const openai = new OpenAI({
 		apiKey,
-		baseURL: "https://generativelanguage.googleapis.com/v1beta/openai/",
-		adminAPIKey: apiKey
+		baseURL: "https://generativelanguage.googleapis.com/v1beta/openai/"
 	});
 	return openai;
 };
