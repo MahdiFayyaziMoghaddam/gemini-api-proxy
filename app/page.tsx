@@ -19,7 +19,7 @@ function Home() {
 	};
 
 	return (
-		<div className="h-screen w-screen overflow-hidden flex flex-col items-center justify-center bg-slate-950 px-6 relative">
+		<div className="h-full w-screen overflow-hidden flex flex-col items-center justify-center bg-slate-950 px-6 relative">
 			<div
 				aria-hidden
 				className="pointer-events-none absolute inset-0 opacity-60"
