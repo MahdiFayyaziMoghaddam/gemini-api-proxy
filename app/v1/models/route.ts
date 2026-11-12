@@ -1,3 +1,4 @@
+import { GoogleGenAI } from "@google/genai";
 import { createResponse, getApiKey, getClient, ModelsResponse } from "../utils";
 
 export const runtime = "nodejs";
@@ -10,16 +11,30 @@ export async function GET(req: Request) {
 			{ status: 401, headers: { "content-type": "application/json" } }
 		);
 	}
-	const openai = getClient(apiKey);
+	const ai = new GoogleGenAI({ apiKey });
+	// const openai = getClient(apiKey);
 	try {
+		const list = await ai.models.list();
+		// list.a
 		const models = [];
-		const list = await openai.models.list();
+		// const list = await openai.models.list();
 		for await (const model of list) {
 			models.push(model);
 		}
-		return createResponse<ModelsResponse>({ data: models, object: "list" }, { status: 200, headers: { "content-type": "application/json" } });
+		return createResponse<any>(
+			{ data: models, object: "list" },
+			{ status: 200, headers: { "content-type": "application/json" } }
+		);
 	} catch (error: any) {
-		const err = error?.error ?? { message: error?.message ?? "Internal server error", type: "api_error", param: null, code: error?.status ?? 500 };
-		return createResponse({ error: err }, { status: error?.status ?? 500, headers: { "content-type": "application/json" } });
+		const err = error?.error ?? {
+			message: error?.message ?? "Internal server error",
+			type: "api_error",
+			param: null,
+			code: error?.status ?? 500
+		};
+		return createResponse(
+			{ error: err },
+			{ status: error?.status ?? 500, headers: { "content-type": "application/json" } }
+		);
 	}
 }
