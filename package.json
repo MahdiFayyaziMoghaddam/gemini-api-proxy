@@ -9,7 +9,6 @@
 		"test": "node test/index.mjs"
 	},
 	"dependencies": {
-		"@google/genai": "^2.32.0",
 		"lucide-react": "^1.64.0",
 		"next": "16.4.3",
 		"openai": "^7.51.0",

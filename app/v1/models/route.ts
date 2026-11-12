@@ -1,4 +1,3 @@
-import { GoogleGenAI } from "@google/genai";
 import { createResponse, getApiKey, getClient, ModelsResponse } from "../utils";
 
 export const runtime = "nodejs";
@@ -11,17 +10,14 @@ export async function GET(req: Request) {
 			{ status: 401, headers: { "content-type": "application/json" } }
 		);
 	}
-	const ai = new GoogleGenAI({ apiKey });
-	// const openai = getClient(apiKey);
+	const openai = getClient(apiKey);
 	try {
-		const list = await ai.models.list();
-		// list.a
 		const models = [];
-		// const list = await openai.models.list();
+		const list = await openai.models.list();
 		for await (const model of list) {
 			models.push(model);
 		}
-		return createResponse<any>(
+		return createResponse<ModelsResponse>(
 			{ data: models, object: "list" },
 			{ status: 200, headers: { "content-type": "application/json" } }
 		);
